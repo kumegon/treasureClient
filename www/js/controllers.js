@@ -23,20 +23,40 @@ angular.module('starter.controllers', [])
   }
 
 
+  function getVideoSources(callback) {
+    if (!navigator.mediaDevices) {
+      console.log("MediaStreamTrack");
+      MediaStreamTrack.getSources(function(cams) {
+        cams.forEach(function(c, i, a) {
+          if (c.kind != 'video') return;
+          callback({
+            name: c.facing,
+            id: c.id
+          });
+        });
+      });
+    } else {
+      navigator.mediaDevices.enumerateDevices().then(function(cams) {
+        cams.forEach(function(c, i, a) {
+          console.log("mediaDevices", c);
+          if (c.kind != 'videoinput') return;
+          callback({
+            name: c.label,
+            id: c.deviceId
+          });
+        });
+      });
+    }
+  }
+
+
     var video = document.querySelector('video');
     var canvas = document.querySelector('canvas');
     var ctx = canvas.getContext('2d');
     var localMediaStream = null;
+    var control = document.getElementById("buttons");
 
-    //カメラ使えるかチェック
-    var hasGetUserMedia = function() {
-      return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
-        navigator.mozGetUserMedia || navigator.msGetUserMedia);
-    }
-    //エラー
-    var onFailSoHard = function(e) {
-      console.log('エラー!', e);
-    };
+
 
     //カメラ画像キャプチャ
     snapshot = function() {
@@ -49,39 +69,43 @@ angular.module('starter.controllers', [])
       }
     }
 
-    if (hasGetUserMedia()) {
-      console.log("カメラ OK");
-    } else {
-      alert("未対応ブラウザです。");
-    }
 
 
-    window.URL = window.URL || window.webkitURL;
-    navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia ||
-                  navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
-    navigator.getUserMedia({video: true}, function(stream) {
-      video.src = window.URL.createObjectURL(stream);
-      localMediaStream = stream;
-    }, onFailSoHard);
-
-    //setInterval('snapshot()', 1000);
-
-
-  $scope.hello = function(){
-    alert( "world" );
-    navigator.camera.getPicture(onSuccess, onFail, { quality: 25,
-        destinationType: Camera.DestinationType.DATA_URL
+    getVideoSources(function(cam) {
+      console.log("cam", cam);
+      var b = document.createElement("input");
+      b.type = "button";
+      b.value = 'button';
+      b.onclick = getMain(cam.id);
+      control.appendChild(b);
     });
 
-    function onSuccess(imageData) {
-        $scope.socket.send(imageData);
+    function getMain(cam_id) {
+      return function() {
+        main(cam_id);
+      };
     }
 
-    function onFail(message) {
-        alert('Failed because: ' + message);
-    }
-  };
+    function main(cam_id) {
+      navigator.getUserMedia({
+        video: {
+          optional: [
+            { sourceId: cam_id}
+          ]
+        }
+      }, function(stream) { // success
+        localMediaStream = stream;
+        video.src = window.URL.createObjectURL(stream);
+      }, function(e) { // error
+      });
+    };
+
+
+    setInterval('snapshot()', 1000);
+
+
+
 })
 
 .controller('ChatsCtrl', function($scope, Chats) {
