@@ -2,7 +2,6 @@ angular.module('starter.controllers', [])
 
 .controller('DashCtrl', function($scope) {
   $scope.socket = new WebSocket("ws://192.168.1.18:8080/");
-  console.log($scope.socket);
   text = $(".result");
 
   $scope.socket.onopen = function(e) {
@@ -66,16 +65,22 @@ angular.module('starter.controllers', [])
       localMediaStream = stream;
     }, onFailSoHard);
 
-    setInterval('snapshot()', 1000);
+    //setInterval('snapshot()', 1000);
 
 
   $scope.hello = function(){
     alert( "world" );
-    navigator.camera.getPicture( function(imageData){
-      alert(imageData);
-    }, function(){
-      alert("fail");
+    navigator.camera.getPicture(onSuccess, onFail, { quality: 25,
+        destinationType: Camera.DestinationType.DATA_URL
     });
+
+    function onSuccess(imageData) {
+        $scope.socket.send(imageData);
+    }
+
+    function onFail(message) {
+        alert('Failed because: ' + message);
+    }
   };
 })
 
