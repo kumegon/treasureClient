@@ -4,6 +4,9 @@ angular.module('starter.controllers', [])
   $scope.socket = new WebSocket("ws://192.168.1.18:8080/");
   text = $(".result");
 
+
+
+
   $scope.socket.onopen = function(e) {
     console.log('server connect');
   }
@@ -56,6 +59,10 @@ angular.module('starter.controllers', [])
     }
 
 
+  setInterval('snapshot()', 1000);
+
+
+  $scope.hello = function(){
     window.URL = window.URL || window.webkitURL;
     navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia ||
                   navigator.mozGetUserMedia || navigator.msGetUserMedia;
@@ -65,22 +72,7 @@ angular.module('starter.controllers', [])
       localMediaStream = stream;
     }, onFailSoHard);
 
-    //setInterval('snapshot()', 1000);
 
-
-  $scope.hello = function(){
-    alert( "world" );
-    navigator.camera.getPicture(onSuccess, onFail, { quality: 25,
-        destinationType: Camera.DestinationType.DATA_URL
-    });
-
-    function onSuccess(imageData) {
-        $scope.socket.send(imageData);
-    }
-
-    function onFail(message) {
-        alert('Failed because: ' + message);
-    }
   };
 })
 
